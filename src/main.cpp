@@ -25,15 +25,25 @@ int main(int argc, char* argv[]) {
     CPU cpu(bus);
 
     try {
-        for (int i = 0; i < 100000; ++i) {
+        for (long i = 0; i < 50000000L; ++i) {
             cpu.step();
+
+            // Serial port output — Blargg's test ROM writes results here
+            // When the game writes to 0xFF02 with value 0x81, it means
+            // "send the byte at 0xFF01 out the serial port"
+            if (bus.read(0xFF02) == 0x81) {
+                char c = static_cast<char>(bus.read(0xFF01));
+                std::cout << c << std::flush;
+                bus.write(0xFF02, 0x00);
+            }
         }
     } catch (const std::exception& e) {
-        std::cerr << "CPU error: " << e.what() << "\n";
+        std::cerr << "\nCPU error: " << e.what() << "\n";
         cpu.dump_state();
         return 1;
     }
 
+    std::cout << "\n";
     cpu.dump_state();
     return 0;
 }

@@ -260,6 +260,7 @@ int CPU::execute(u8 op) {
     case 0x26: h_ = fetch8(); return 8;
     case 0x2E: l_ = fetch8(); return 8;
     case 0x3E: a_ = fetch8(); return 8;
+    case 0x36: bus_.write(hl(), fetch8()); return 12;
 
     // ---- LOAD REGISTER TO REGISTER ----
     case 0x40: return 4;
@@ -286,6 +287,53 @@ int CPU::execute(u8 op) {
     case 0x7D: a_ = l_; return 4;
     case 0x7E: a_ = bus_.read(hl()); return 8;
     case 0x7F: return 4;
+    // Row D
+    case 0x50: d_ = b_; return 4;
+    case 0x51: d_ = c_; return 4;
+    case 0x52: return 4;
+    case 0x53: d_ = e_; return 4;
+    case 0x54: d_ = h_; return 4;
+    case 0x55: d_ = l_; return 4;
+    case 0x56: d_ = bus_.read(hl()); return 8;
+    case 0x57: d_ = a_; return 4;
+
+    // Row E
+    case 0x58: e_ = b_; return 4;
+    case 0x59: e_ = c_; return 4;
+    case 0x5A: e_ = d_; return 4;
+    case 0x5B: return 4;
+    case 0x5C: e_ = h_; return 4;
+    case 0x5D: e_ = l_; return 4;
+    case 0x5E: e_ = bus_.read(hl()); return 8;
+    case 0x5F: e_ = a_; return 4;
+
+    // Row H
+    case 0x60: h_ = b_; return 4;
+    case 0x61: h_ = c_; return 4;
+    case 0x62: h_ = d_; return 4;
+    case 0x63: h_ = e_; return 4;
+    case 0x64: return 4;
+    case 0x65: h_ = l_; return 4;
+    case 0x66: h_ = bus_.read(hl()); return 8;
+    case 0x67: h_ = a_; return 4;
+
+    // Row L
+    case 0x68: l_ = b_; return 4;
+    case 0x69: l_ = c_; return 4;
+    case 0x6A: l_ = d_; return 4;
+    case 0x6B: l_ = e_; return 4;
+    case 0x6C: l_ = h_; return 4;
+    case 0x6D: return 4;
+    case 0x6E: l_ = bus_.read(hl()); return 8;
+    case 0x6F: l_ = a_; return 4;
+
+    // Row (HL)
+    case 0x70: bus_.write(hl(), b_); return 8;
+    case 0x71: bus_.write(hl(), c_); return 8;
+    case 0x72: bus_.write(hl(), d_); return 8;
+    case 0x73: bus_.write(hl(), e_); return 8;
+    case 0x74: bus_.write(hl(), h_); return 8;
+    case 0x75: bus_.write(hl(), l_); return 8;
 
     // ---- LOAD A <-> MEMORY ----
     case 0x02: bus_.write(bc(), a_); return 8;
@@ -326,6 +374,15 @@ int CPU::execute(u8 op) {
     case 0x86: a_ = alu_add(a_, bus_.read(hl())); return 8;
     case 0x87: a_ = alu_add(a_, a_); return 4;
     case 0xC6: a_ = alu_add(a_, fetch8()); return 8;
+    case 0x88: a_ = alu_add(a_, b_, flag_c()); return 4;
+    case 0x89: a_ = alu_add(a_, c_, flag_c()); return 4;
+    case 0x8A: a_ = alu_add(a_, d_, flag_c()); return 4;
+    case 0x8B: a_ = alu_add(a_, e_, flag_c()); return 4;
+    case 0x8C: a_ = alu_add(a_, h_, flag_c()); return 4;
+    case 0x8D: a_ = alu_add(a_, l_, flag_c()); return 4;
+    case 0x8E: a_ = alu_add(a_, bus_.read(hl()), flag_c()); return 8;
+    case 0x8F: a_ = alu_add(a_, a_, flag_c()); return 4;
+    case 0xCE: a_ = alu_add(a_, fetch8(), flag_c()); return 8;
     case 0x90: a_ = alu_sub(a_, b_); return 4;
     case 0x91: a_ = alu_sub(a_, c_); return 4;
     case 0x92: a_ = alu_sub(a_, d_); return 4;
@@ -335,6 +392,15 @@ int CPU::execute(u8 op) {
     case 0x96: a_ = alu_sub(a_, bus_.read(hl())); return 8;
     case 0x97: a_ = alu_sub(a_, a_); return 4;
     case 0xD6: a_ = alu_sub(a_, fetch8()); return 8;
+    case 0x98: a_ = alu_sub(a_, b_, flag_c()); return 4;
+    case 0x99: a_ = alu_sub(a_, c_, flag_c()); return 4;
+    case 0x9A: a_ = alu_sub(a_, d_, flag_c()); return 4;
+    case 0x9B: a_ = alu_sub(a_, e_, flag_c()); return 4;
+    case 0x9C: a_ = alu_sub(a_, h_, flag_c()); return 4;
+    case 0x9D: a_ = alu_sub(a_, l_, flag_c()); return 4;
+    case 0x9E: a_ = alu_sub(a_, bus_.read(hl()), flag_c()); return 8;
+    case 0x9F: a_ = alu_sub(a_, a_, flag_c()); return 4;
+    case 0xDE: a_ = alu_sub(a_, fetch8(), flag_c()); return 8;
     case 0x04: b_ = alu_inc(b_); return 4;
     case 0x0C: c_ = alu_inc(c_); return 4;
     case 0x14: d_ = alu_inc(d_); return 4;
@@ -342,6 +408,7 @@ int CPU::execute(u8 op) {
     case 0x24: h_ = alu_inc(h_); return 4;
     case 0x2C: l_ = alu_inc(l_); return 4;
     case 0x3C: a_ = alu_inc(a_); return 4;
+    case 0x34: { u8 t = alu_inc(bus_.read(hl())); bus_.write(hl(), t); return 12; }
     case 0x05: b_ = alu_dec(b_); return 4;
     case 0x0D: c_ = alu_dec(c_); return 4;
     case 0x15: d_ = alu_dec(d_); return 4;
@@ -349,32 +416,95 @@ int CPU::execute(u8 op) {
     case 0x25: h_ = alu_dec(h_); return 4;
     case 0x2D: l_ = alu_dec(l_); return 4;
     case 0x3D: a_ = alu_dec(a_); return 4;
+    case 0x35: { u8 t = alu_dec(bus_.read(hl())); bus_.write(hl(), t); return 12; }
+
+    // ---- 16-BIT INC / DEC ----
+    case 0x03: set_bc(bc() + 1); return 8;
+    case 0x13: set_de(de() + 1); return 8;
+    case 0x23: set_hl(hl() + 1); return 8;
+    case 0x33: sp_++; return 8;
+    case 0x0B: set_bc(bc() - 1); return 8;
+    case 0x1B: set_de(de() - 1); return 8;
+    case 0x2B: set_hl(hl() - 1); return 8;
+    case 0x3B: sp_--; return 8;
+
+    // ---- 16-BIT ADD HL ----
+    case 0x09: { u32 r = hl() + bc(); set_flag_n(false); set_flag_h((hl() & 0xFFF) + (bc() & 0xFFF) > 0xFFF); set_flag_c(r > 0xFFFF); set_hl(static_cast<u16>(r)); return 8; }
+    case 0x19: { u32 r = hl() + de(); set_flag_n(false); set_flag_h((hl() & 0xFFF) + (de() & 0xFFF) > 0xFFF); set_flag_c(r > 0xFFFF); set_hl(static_cast<u16>(r)); return 8; }
+    case 0x29: { u32 r = hl() + hl(); set_flag_n(false); set_flag_h((hl() & 0xFFF) + (hl() & 0xFFF) > 0xFFF); set_flag_c(r > 0xFFFF); set_hl(static_cast<u16>(r)); return 8; }
+    case 0x39: { u32 r = hl() + sp_; set_flag_n(false); set_flag_h((hl() & 0xFFF) + (sp_ & 0xFFF) > 0xFFF); set_flag_c(r > 0xFFFF); set_hl(static_cast<u16>(r)); return 8; }
 
     // ---- LOGICAL ----
     case 0xA0: a_ = alu_and(a_, b_); return 4;
+    case 0xA1: a_ = alu_and(a_, c_); return 4;
+    case 0xA2: a_ = alu_and(a_, d_); return 4;
+    case 0xA3: a_ = alu_and(a_, e_); return 4;
+    case 0xA4: a_ = alu_and(a_, h_); return 4;
+    case 0xA5: a_ = alu_and(a_, l_); return 4;
+    case 0xA6: a_ = alu_and(a_, bus_.read(hl())); return 8;
     case 0xA7: a_ = alu_and(a_, a_); return 4;
-    case 0xE6: a_ = alu_and(a_, fetch8()); return 8;
-    case 0xB0: a_ = alu_or(a_, b_); return 4;
-    case 0xB7: a_ = alu_or(a_, a_); return 4;
-    case 0xF6: a_ = alu_or(a_, fetch8()); return 8;
     case 0xA8: a_ = alu_xor(a_, b_); return 4;
+    case 0xA9: a_ = alu_xor(a_, c_); return 4;
+    case 0xAA: a_ = alu_xor(a_, d_); return 4;
+    case 0xAB: a_ = alu_xor(a_, e_); return 4;
+    case 0xAC: a_ = alu_xor(a_, h_); return 4;
+    case 0xAD: a_ = alu_xor(a_, l_); return 4;
+    case 0xAE: a_ = alu_xor(a_, bus_.read(hl())); return 8;
     case 0xAF: a_ = alu_xor(a_, a_); return 4;
-    case 0xEE: a_ = alu_xor(a_, fetch8()); return 8;
+    case 0xB0: a_ = alu_or(a_, b_); return 4;
+    case 0xB1: a_ = alu_or(a_, c_); return 4;
+    case 0xB2: a_ = alu_or(a_, d_); return 4;
+    case 0xB3: a_ = alu_or(a_, e_); return 4;
+    case 0xB4: a_ = alu_or(a_, h_); return 4;
+    case 0xB5: a_ = alu_or(a_, l_); return 4;
+    case 0xB6: a_ = alu_or(a_, bus_.read(hl())); return 8;
+    case 0xB7: a_ = alu_or(a_, a_); return 4;
+    case 0xB8: alu_sub(a_, b_); return 4;
+    case 0xB9: alu_sub(a_, c_); return 4;
+    case 0xBA: alu_sub(a_, d_); return 4;
+    case 0xBB: alu_sub(a_, e_); return 4;
+    case 0xBC: alu_sub(a_, h_); return 4;
+    case 0xBD: alu_sub(a_, l_); return 4;
+    case 0xBE: alu_sub(a_, bus_.read(hl())); return 8;
     case 0xBF: alu_sub(a_, a_); return 4;
+    case 0xE6: a_ = alu_and(a_, fetch8()); return 8;
+    case 0xF6: a_ = alu_or(a_, fetch8()); return 8;
+    case 0xEE: a_ = alu_xor(a_, fetch8()); return 8;
     case 0xFE: alu_sub(a_, fetch8()); return 8;
 
     // ---- JUMPS ----
     case 0xC3: pc_ = fetch16(); return 16;
+    case 0xE9: pc_ = hl(); return 4;
     case 0x18: { s8 e = static_cast<s8>(fetch8()); pc_ = static_cast<u16>(pc_ + e); return 12; }
     case 0x20: { s8 e = static_cast<s8>(fetch8()); if (!flag_z()) { pc_ = static_cast<u16>(pc_ + e); return 12; } return 8; }
     case 0x28: { s8 e = static_cast<s8>(fetch8()); if (flag_z())  { pc_ = static_cast<u16>(pc_ + e); return 12; } return 8; }
     case 0x30: { s8 e = static_cast<s8>(fetch8()); if (!flag_c()) { pc_ = static_cast<u16>(pc_ + e); return 12; } return 8; }
     case 0x38: { s8 e = static_cast<s8>(fetch8()); if (flag_c())  { pc_ = static_cast<u16>(pc_ + e); return 12; } return 8; }
+    case 0xC2: { u16 addr = fetch16(); if (!flag_z()) { pc_ = addr; return 16; } return 12; }
+    case 0xCA: { u16 addr = fetch16(); if (flag_z())  { pc_ = addr; return 16; } return 12; }
+    case 0xD2: { u16 addr = fetch16(); if (!flag_c()) { pc_ = addr; return 16; } return 12; }
+    case 0xDA: { u16 addr = fetch16(); if (flag_c())  { pc_ = addr; return 16; } return 12; }
 
     // ---- CALLS / RETURNS ----
     case 0xCD: { u16 addr = fetch16(); push(pc_); pc_ = addr; return 24; }
+    case 0xC4: { u16 addr = fetch16(); if (!flag_z()) { push(pc_); pc_ = addr; return 24; } return 12; }
+    case 0xCC: { u16 addr = fetch16(); if (flag_z())  { push(pc_); pc_ = addr; return 24; } return 12; }
+    case 0xD4: { u16 addr = fetch16(); if (!flag_c()) { push(pc_); pc_ = addr; return 24; } return 12; }
+    case 0xDC: { u16 addr = fetch16(); if (flag_c())  { push(pc_); pc_ = addr; return 24; } return 12; }
     case 0xC9: pc_ = pop(); return 16;
     case 0xD9: pc_ = pop(); ime_ = true; return 16;
+    case 0xC0: { if (!flag_z()) { pc_ = pop(); return 20; } return 8; }
+    case 0xC8: { if (flag_z())  { pc_ = pop(); return 20; } return 8; }
+    case 0xD0: { if (!flag_c()) { pc_ = pop(); return 20; } return 8; }
+    case 0xD8: { if (flag_c())  { pc_ = pop(); return 20; } return 8; }
+    case 0xC7: push(pc_); pc_ = 0x0000; return 16;
+    case 0xCF: push(pc_); pc_ = 0x0008; return 16;
+    case 0xD7: push(pc_); pc_ = 0x0010; return 16;
+    case 0xDF: push(pc_); pc_ = 0x0018; return 16;
+    case 0xE7: push(pc_); pc_ = 0x0020; return 16;
+    case 0xEF: push(pc_); pc_ = 0x0028; return 16;
+    case 0xF7: push(pc_); pc_ = 0x0030; return 16;
+    case 0xFF: push(pc_); pc_ = 0x0038; return 16;
 
     // ---- INTERRUPTS ----
     case 0xF3: ime_ = false; return 4;
@@ -383,9 +513,45 @@ int CPU::execute(u8 op) {
     // ---- MISC ----
     case 0x76: halted_ = true; return 4;
     case 0x2F: a_ = ~a_; set_flag_n(true); set_flag_h(true); return 4;
+    case 0x3F: set_flag_n(false); set_flag_h(false); set_flag_c(!flag_c()); return 4;
+    case 0x37: set_flag_n(false); set_flag_h(false); set_flag_c(true); return 4;
+    case 0x07: { bool c = (a_ >> 7) & 1; a_ = static_cast<u8>((a_ << 1) | c); set_flags(false, false, false, c); return 4; }
+    case 0x0F: { bool c = a_ & 1; a_ = static_cast<u8>((a_ >> 1) | (c ? 0x80 : 0)); set_flags(false, false, false, c); return 4; }
+    case 0x17: { bool c = (a_ >> 7) & 1; a_ = static_cast<u8>((a_ << 1) | flag_c()); set_flags(false, false, false, c); return 4; }
+    case 0x1F: { bool c = a_ & 1; a_ = static_cast<u8>((a_ >> 1) | (flag_c() ? 0x80 : 0)); set_flags(false, false, false, c); return 4; }
+    case 0x08: { u16 addr = fetch16(); bus_.write16(addr, sp_); return 20; }
+    case 0xF8: { s8 e = static_cast<s8>(fetch8()); set_flag_z(false); set_flag_n(false); set_flag_h(((sp_ & 0xF) + (e & 0xF)) > 0xF); set_flag_c(((sp_ & 0xFF) + static_cast<u8>(e)) > 0xFF); set_hl(static_cast<u16>(sp_ + e)); return 12; }
+    case 0xF9: sp_ = hl(); return 8;
     case 0xE0: bus_.write(static_cast<u16>(0xFF00 + fetch8()), a_); return 12;
     case 0xF0: a_ = bus_.read(static_cast<u16>(0xFF00 + fetch8())); return 12;
+    case 0xE2: bus_.write(static_cast<u16>(0xFF00 + c_), a_); return 8;
+    case 0xF2: a_ = bus_.read(static_cast<u16>(0xFF00 + c_)); return 8;
+    case 0x27: {
+        u8 correction = 0;
+        if (!flag_n()) {
+            if (flag_h() || (a_ & 0x0F) > 9) correction |= 0x06;
+            if (flag_c() || a_ > 0x99) { correction |= 0x60; set_flag_c(true); }
+            a_ += correction;
+        } else {
+            if (flag_h()) correction |= 0x06;
+            if (flag_c()) correction |= 0x60;
+            a_ -= correction;
+        }
+        set_flag_z(a_ == 0);
+        set_flag_h(false);
+        return 4;
+    }
     case 0xCB: return execute_cb(fetch8());
+    case 0x10: fetch8(); return 4; // STOP — we just skip it
+    case 0xE8: { 
+    s8 e = static_cast<s8>(fetch8()); 
+    set_flag_z(false); 
+    set_flag_n(false); 
+    set_flag_h(((sp_ & 0xF) + (e & 0xF)) > 0xF); 
+    set_flag_c(((sp_ & 0xFF) + static_cast<u8>(e)) > 0xFF); 
+    sp_ = static_cast<u16>(sp_ + e); 
+    return 16; 
+}
 
     default:
         throw std::runtime_error(
