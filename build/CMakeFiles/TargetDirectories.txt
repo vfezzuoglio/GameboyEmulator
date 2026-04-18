@@ -1,3 +1,0 @@
-C:/Users/tssxe/OneDrive/Desktop/Gameboy emulator/build/CMakeFiles/gbemu.dir
-C:/Users/tssxe/OneDrive/Desktop/Gameboy emulator/build/CMakeFiles/edit_cache.dir
-C:/Users/tssxe/OneDrive/Desktop/Gameboy emulator/build/CMakeFiles/rebuild_cache.dir
