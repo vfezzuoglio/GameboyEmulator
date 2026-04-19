@@ -25,7 +25,15 @@ int CPU::step() {
     int cycles = handle_interrupts();
     if (cycles > 0) return cycles;
 
-    if (halted_) return 4;
+    if (halted_) {
+        // Check if any interrupt is pending even with IME off
+        u8 ie  = bus_.read(0xFFFF);
+        u8 ifl = bus_.read(0xFF0F);
+        if (ie & ifl) {
+            halted_ = false;
+        }
+        return 4;
+    }
 
     if (ime_next_) {
         ime_      = true;
