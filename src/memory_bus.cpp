@@ -37,6 +37,10 @@ u8 MemoryBus::read(u16 address) const {
         u32 local = address - 0x4000;
         return rom_[offset + local];
     }
+        // Timer registers
+    if (address >= 0xFF03 && address <= 0xFF07) {
+        return timer_.read(address);
+    }
     return mem_[address];
 }
 
@@ -49,6 +53,11 @@ void MemoryBus::write(u16 address, u8 value) {
             if (bank == 0) bank = 1;
             rom_bank_ = bank;
         }
+        return;
+    }
+        // Timer registers
+    if (address >= 0xFF03 && address <= 0xFF07) {
+        timer_.write(address, value);
         return;
     }
     mem_[address] = value;
@@ -65,3 +74,11 @@ void MemoryBus::write16(u16 address, u16 value){
     write(address + 1, static_cast<u8>((value >> 8) & 0xFF));
 }
 
+bool MemoryBus::tick_timer(int cycles) {
+    bool interrupt = timer_.tick(cycles);
+    if (interrupt) {
+        // Set the timer interrupt flag (bit 2 of IF register)
+        mem_[0xFF0F] |= 0x04;
+    }
+    return interrupt;
+}

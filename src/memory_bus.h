@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include <stdexcept>
+#include "timer.h"
 
 
 struct CartridgeHeader {
@@ -22,6 +23,7 @@ public:
     MemoryBus& operator=(const MemoryBus&) = delete;
     MemoryBus(MemoryBus&&)                 = delete;
     MemoryBus& operator=(MemoryBus&&)      = delete;
+    bool tick_timer(int cycles);
 
     void load_rom(const std::string& path);
 
@@ -38,6 +40,7 @@ private:
     CartridgeHeader         header_{};
     u8   rom_bank_ = 1;
     bool ram_enabled_ = false;
+    Timer timer_;
 
 
 };
