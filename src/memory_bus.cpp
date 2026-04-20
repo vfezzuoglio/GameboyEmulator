@@ -27,7 +27,6 @@ void MemoryBus::load_rom(const std::string& path) {
     }
 }
 
-
 u8 MemoryBus::read(u16 address) const {
     if (address < 0x8000) {
         if (address < 0x4000) {
@@ -37,15 +36,23 @@ u8 MemoryBus::read(u16 address) const {
         u32 local = address - 0x4000;
         return rom_[offset + local];
     }
-        // Timer registers
+    if (address >= 0x8000 && address < 0xA000) {
+        return ppu_.read(address);
+    }
+    if (address >= 0xFE00 && address < 0xFEA0) {
+        return ppu_.read(address);
+    }
     if (address >= 0xFF03 && address <= 0xFF07) {
         return timer_.read(address);
+    }
+    if (address >= 0xFF40 && address <= 0xFF4B) {
+        return ppu_.read(address);
     }
     return mem_[address];
 }
 
 void MemoryBus::write(u16 address, u8 value) {
-    if (address <0x8000) {
+    if (address < 0x8000) {
         if (address < 0x2000) {
             ram_enabled_ = ((value & 0x0F) == 0x0A);
         } else if (address < 0x4000) {
@@ -55,9 +62,20 @@ void MemoryBus::write(u16 address, u8 value) {
         }
         return;
     }
-        // Timer registers
+    if (address >= 0x8000 && address < 0xA000) {
+        ppu_.write(address, value);
+        return;
+    }
+    if (address >= 0xFE00 && address < 0xFEA0) {
+        ppu_.write(address, value);
+        return;
+    }
     if (address >= 0xFF03 && address <= 0xFF07) {
         timer_.write(address, value);
+        return;
+    }
+    if (address >= 0xFF40 && address <= 0xFF4B) {
+        ppu_.write(address, value);
         return;
     }
     mem_[address] = value;
@@ -69,7 +87,7 @@ u16 MemoryBus::read16(u16 address) const {
     return static_cast<u16>((hi << 8) | lo);
 }
 
-void MemoryBus::write16(u16 address, u16 value){
+void MemoryBus::write16(u16 address, u16 value) {
     write(address,     static_cast<u8>(value & 0xFF));
     write(address + 1, static_cast<u8>((value >> 8) & 0xFF));
 }
@@ -77,8 +95,15 @@ void MemoryBus::write16(u16 address, u16 value){
 bool MemoryBus::tick_timer(int cycles) {
     bool interrupt = timer_.tick(cycles);
     if (interrupt) {
-        // Set the timer interrupt flag (bit 2 of IF register)
         mem_[0xFF0F] |= 0x04;
     }
     return interrupt;
+}
+
+bool MemoryBus::tick_ppu(int cycles) {
+    bool vblank = ppu_.tick(cycles);
+    if (vblank) {
+        mem_[0xFF0F] |= 0x01;
+    }
+    return vblank;
 }

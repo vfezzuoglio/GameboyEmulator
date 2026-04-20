@@ -10,3 +10,6 @@ file(GLOB_RECURSE SOURCES "src/*.cpp")
 add_executable(gbemu ${SOURCES})
 
 target_include_directories(gbemu PRIVATE src)
+
+find_package(SDL2 REQUIRED)
+target_link_libraries(gbemu PRIVATE SDL2::SDL2main SDL2::SDL2)

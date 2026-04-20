@@ -6,6 +6,7 @@
 #include <string>
 #include <stdexcept>
 #include "timer.h"
+#include "ppu.h"
 
 
 struct CartridgeHeader {
@@ -31,6 +32,8 @@ public:
     void write(u16 address, u8 value);
     u16 read16(u16 address) const;
     void write16(u16 address, u16 value);
+    bool tick_ppu(int cycles);
+    PPU& ppu() { return ppu_; }
 
     const CartridgeHeader& header() const { return header_; }
 
@@ -41,6 +44,7 @@ private:
     u8   rom_bank_ = 1;
     bool ram_enabled_ = false;
     Timer timer_;
+    PPU ppu_;
 
 
 };
