@@ -21,6 +21,7 @@ jobs:
         install: >-
           mingw-w64-ucrt-x86_64-gcc
           mingw-w64-ucrt-x86_64-cmake
+          mingw-w64-ucrt-x86_64-make
           mingw-w64-ucrt-x86_64-SDL2
 
     - name: Build
@@ -28,9 +29,9 @@ jobs:
       run: |
         mkdir -p build
         cd build
-        cmake .. -G "MinGW Makefiles" -DCMAKE_MAKE_PROGRAM=/ucrt64/bin/mingw32-make.exe -DCMAKE_C_COMPILER=/ucrt64/bin/gcc.exe -DCMAKE_CXX_COMPILER=/ucrt64/bin/g++.exe -DCMAKE_BUILD_TYPE=Release
-        mingw32-make
-        
+        cmake .. -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release
+        make
+
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
