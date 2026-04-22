@@ -2,9 +2,6 @@
 
 A Game Boy (DMG) emulator written in C++ from scratch. Passes all 11 Blargg `cpu_instrs` tests, confirming a cycle-accurate SM83 CPU implementation.
 
-## Screenshots
-
-![Blargg Tests](screenshots/blargg.png) ![Tetris](screenshots/tetris.png)
 
 ## Features
 
