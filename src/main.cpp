@@ -32,14 +32,36 @@ int main(int argc, char* argv[]) {
         while (running) {
             // Handle window events
             while (SDL_PollEvent(&event)) {
-                if (event.type == SDL_QUIT) {
-                    running = false;
-                }
-                if (event.type == SDL_KEYDOWN &&
-                    event.key.keysym.sym == SDLK_ESCAPE) {
-                    running = false;
-                }
-            }
+                            if (event.type == SDL_QUIT) running = false;
+                            if (event.type == SDL_KEYDOWN &&
+                                event.key.keysym.sym == SDLK_ESCAPE) running = false;
+
+                            if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
+                                bool pressed = (event.type == SDL_KEYDOWN);
+
+                                // joypad_state_ packs all 8 buttons into one byte.
+                                // Low nibble = buttons: A, B, Select, Start (bits 0-3)
+                                // High nibble = d-pad:  Right, Left, Up, Down (bits 4-7)
+                                // 0 = pressed, 1 = not pressed (inverted logic)
+
+
+                                switch (event.key.keysym.sym) {
+                                case SDLK_z:         pressed ? bus.button_down(0) : bus.button_up(0); break; // A
+                                case SDLK_x:         pressed ? bus.button_down(1) : bus.button_up(1); break; // B
+                                case SDLK_BACKSPACE: pressed ? bus.button_down(2) : bus.button_up(2); break; // Select
+                                case SDLK_RETURN:    pressed ? bus.button_down(3) : bus.button_up(3); break; // Start
+                                case SDLK_RIGHT:     pressed ? bus.button_down(4) : bus.button_up(4); break; // Right
+                                case SDLK_LEFT:      pressed ? bus.button_down(5) : bus.button_up(5); break; // Left
+                                case SDLK_UP:        pressed ? bus.button_down(6) : bus.button_up(6); break; // Up
+                                case SDLK_DOWN:      pressed ? bus.button_down(7) : bus.button_up(7); break; // Down
+                                default: break;
+                            }
+
+                            if (pressed) {
+                                bus.write(0xFF0F, bus.read(0xFF0F) | 0x10);
+                            }
+                            }
+                        }
 
             // Run one frame worth of cycles (~70224 T-cycles per frame)
             int frame_cycles = 0;

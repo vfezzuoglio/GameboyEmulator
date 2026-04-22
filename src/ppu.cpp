@@ -35,7 +35,14 @@ PPU::~PPU() {
 
 bool PPU::tick(int cycles) {
     // If LCD is off, do nothing
-    if (!(lcdc_ & 0x80)) return false;
+    if (!(lcdc_ & 0x80)) {
+    // LCD off — fill screen with white and signal frame done
+    framebuffer_.fill(COLORS[0]);
+    ly_ = 0;
+    mode_ = PPUMode::OAMScan;
+    cycle_count_ = 0;
+    return false;
+}
 
     frame_ready_ = false;
     cycle_count_ += cycles;
