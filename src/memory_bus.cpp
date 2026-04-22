@@ -94,6 +94,15 @@ void MemoryBus::write(u16 address, u8 value) {
         joypad_select_ = value;
         return;
     }
+        // OAM DMA transfer
+    if (address == 0xFF46) {
+        u16 src = static_cast<u16>(value) << 8;
+        for (int i = 0; i < 0xA0; i++) {
+            ppu_.write(0xFE00 + i, read(src + i));
+        }
+        mem_[address] = value;
+        return;
+    }
     mem_[address] = value;
 }
 

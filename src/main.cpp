@@ -3,6 +3,8 @@
 #include <iostream>
 #include <string>
 #include <SDL2/SDL.h>
+#include <chrono>
+#include <thread>
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
@@ -91,6 +93,16 @@ int main(int argc, char* argv[]) {
             SDL_RenderClear(ppu.renderer_);
             SDL_RenderCopy(ppu.renderer_, ppu.texture_, nullptr, nullptr);
             SDL_RenderPresent(ppu.renderer_);
+
+            // Frame limiter — target 59.73fps
+            static auto last_frame = std::chrono::steady_clock::now();
+            auto now = std::chrono::steady_clock::now();
+            auto frame_duration = std::chrono::microseconds(16742); // 1/59.73 seconds
+            auto elapsed = now - last_frame;
+            if (elapsed < frame_duration) {
+                std::this_thread::sleep_for(frame_duration - elapsed);
+            }
+            last_frame = std::chrono::steady_clock::now();
         }
     } catch (const std::exception& e) {
         std::cerr << "\nCPU error: " << e.what() << "\n";

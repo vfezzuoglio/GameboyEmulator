@@ -18,7 +18,7 @@ PPU::PPU() {
     );
 
     renderer_ = SDL_CreateRenderer(window_, -1,
-        SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+        SDL_RENDERER_ACCELERATED);
 
     texture_ = SDL_CreateTexture(renderer_,
         SDL_PIXELFORMAT_ARGB8888,
@@ -56,20 +56,20 @@ bool PPU::tick(int cycles) {
             }
             break;
 
-        case PPUMode::Drawing:
-            if (cycle_count_ >= 172) {
-                cycle_count_ -= 172;
-                draw_scanline();
-                mode_ = PPUMode::HBlank;
-                stat_ = (stat_ & 0xFC) | 0x00;
-                if (stat_ & 0x08) stat_interrupt_ = true;
-            }
-            break;
+    case PPUMode::Drawing:
+        if (cycle_count_ >= 172) {
+            cycle_count_ -= 172;
+            mode_ = PPUMode::HBlank;
+            stat_ = (stat_ & 0xFC) | 0x00;
+            if (stat_ & 0x08) stat_interrupt_ = true;
+        }
+        break;
 
-        case PPUMode::HBlank:
-            if (cycle_count_ >= 204) {
-                cycle_count_ -= 204;
-                ly_++;
+    case PPUMode::HBlank:
+        if (cycle_count_ >= 204) {
+            cycle_count_ -= 204;
+            draw_scanline();
+            ly_++;
 
                 // LYC coincidence check
                 if (ly_ == lyc_) {
@@ -151,10 +151,14 @@ void PPU::write(u16 address, u8 value) {
         case 0xFF44: ly_   = 0; break;    // Writing to LY resets it
         case 0xFF45: lyc_  = value; break;
         case 0xFF47: bgp_  = value; break;
-        case 0xFF48: obp0_ = value; break;
+        case 0xFF48:
+            printf("OBP0=0x%02X\n", value);
+            obp0_ = value; 
+            break;
         case 0xFF49: obp1_ = value; break;
         case 0xFF4A: wy_   = value; break;
         case 0xFF4B: wx_   = value; break;
+        
         default: break;
     }
 }
@@ -320,7 +324,7 @@ void PPU::draw_sprites(int line) {
     // Byte 1: X position (minus 8)
     // Byte 2: Tile index
     // Byte 3: Flags (palette, flip, priority)
-    for (int i = 0; i < 40 && sprites_drawn < 10; i++) {
+    for (int i = 0; i < 40 && sprites_drawn < 40; i++) {
         int base  = i * 4;
         int spr_y = oam_[base + 0] - 16;
         int spr_x = oam_[base + 1] - 8;
@@ -353,6 +357,14 @@ void PPU::draw_sprites(int line) {
 
             // Color ID 0 is transparent for sprites
             if (color_id == 0) continue;
+
+            // Bit 7 of flags = sprite priority
+            // If set, sprite is behind background colors 1-3
+            //bool behind_bg = (flags & 0x80) != 0;
+            //if (behind_bg) {
+            //    u32 bg_pixel = framebuffer_[line * SCREEN_WIDTH + screen_x];
+            //    if (bg_pixel != COLORS[0]) continue;
+            //}
 
             framebuffer_[line * SCREEN_WIDTH + screen_x] = get_color(palette, color_id);
         }
