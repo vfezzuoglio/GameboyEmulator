@@ -83,6 +83,7 @@ private:
     void draw_scanline();
     void draw_background(int line);
     void draw_sprites(int line);
+    void draw_window(int line);
 
     // Get color from palette register
     u32 get_color(u8 palette, u8 color_id) const;

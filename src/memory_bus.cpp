@@ -50,11 +50,11 @@ u8 MemoryBus::read(u16 address) const {
     }
     if (address == 0xFF00) {
         u8 result = 0xCF;
-        if (!(joypad_select_ & 0x20)) {
+        if (!(joypad_select_ & 0x10)) {
             result &= 0xF0;
             result |= (joypad_state_ >> 4) & 0x0F;
         }
-        if (!(joypad_select_ & 0x10)) {
+        if (!(joypad_select_ & 0x20)) {
             result &= 0xF0;
             result |= joypad_state_ & 0x0F;
         }
@@ -90,7 +90,7 @@ void MemoryBus::write(u16 address, u8 value) {
         ppu_.write(address, value);
         return;
     }
-        if (address == 0xFF00) {
+    if (address == 0xFF00) {
         joypad_select_ = value;
         return;
     }

@@ -36,13 +36,14 @@ PPU::~PPU() {
 bool PPU::tick(int cycles) {
     // If LCD is off, do nothing
     if (!(lcdc_ & 0x80)) {
-    // LCD off — fill screen with white and signal frame done
-    framebuffer_.fill(COLORS[0]);
-    ly_ = 0;
-    mode_ = PPUMode::OAMScan;
-    cycle_count_ = 0;
-    return false;
-}
+        cycle_count_ += cycles;
+        if (cycle_count_ >= 70224) {
+            cycle_count_ -= 70224;
+            framebuffer_.fill(COLORS[0]);
+            return true;
+        }
+        return false;
+    }
 
     frame_ready_ = false;
     cycle_count_ += cycles;
@@ -164,6 +165,7 @@ u32 PPU::get_color(u8 palette, u8 color_id) const {
 void PPU::draw_scanline() {
     if (ly_ >= SCREEN_HEIGHT) return;
     draw_background(ly_);
+    draw_window(ly_);
     draw_sprites(ly_);
 }
 
@@ -240,6 +242,49 @@ void PPU::draw_background(int line) {
         int bit      = 7 - pixel_x;
         u8  low      = (byte1 >> bit) & 1;
         u8  high     = (byte2 >> bit) & 1;
+        u8  color_id = static_cast<u8>((high << 1) | low);
+
+        framebuffer_[line * SCREEN_WIDTH + x] = get_color(bgp_, color_id);
+    }
+}
+void PPU::draw_window(int line) {
+    if (!(lcdc_ & 0x20)) return; // Window disabled
+    if (line < wy_) return;      // Current line is above window
+
+    int wx_adjusted = wx_ - 7;   // WX is offset by 7 on real hardware
+    if (wx_adjusted >= SCREEN_WIDTH) return;
+
+    u16 map_base = (lcdc_ & 0x40) ? 0x9C00 : 0x9800;
+    bool signed_tiles = !(lcdc_ & 0x10);
+
+    int window_line = line - wy_;
+    int tile_row = window_line / 8;
+
+    for (int x = wx_adjusted; x < SCREEN_WIDTH; x++) {
+        int window_x = x - wx_adjusted;
+        int tile_col = window_x / 8;
+
+        u16 map_addr = map_base + tile_row * 32 + tile_col;
+        u8  tile_id  = vram_[map_addr - 0x8000];
+
+        u16 tile_data_addr;
+        if (signed_tiles) {
+            s8 signed_id = static_cast<s8>(tile_id);
+            tile_data_addr = static_cast<u16>(0x9000 + signed_id * 16);
+        } else {
+            tile_data_addr = static_cast<u16>(0x8000 + tile_id * 16);
+        }
+
+        int pixel_y  = window_line % 8;
+        u16 row_addr = tile_data_addr + pixel_y * 2;
+
+        u8 byte1 = vram_[row_addr - 0x8000];
+        u8 byte2 = vram_[row_addr - 0x8000 + 1];
+
+        int pixel_x = window_x % 8;
+        int bit     = 7 - pixel_x;
+        u8  low     = (byte1 >> bit) & 1;
+        u8  high    = (byte2 >> bit) & 1;
         u8  color_id = static_cast<u8>((high << 1) | low);
 
         framebuffer_[line * SCREEN_WIDTH + x] = get_color(bgp_, color_id);
