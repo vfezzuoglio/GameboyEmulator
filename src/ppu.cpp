@@ -34,7 +34,6 @@ PPU::~PPU() {
 }
 
 bool PPU::tick(int cycles) {
-    // If LCD is off, do nothing
     if (!(lcdc_ & 0x80)) {
         cycle_count_ += cycles;
         if (cycle_count_ >= 70224) {
@@ -53,6 +52,7 @@ bool PPU::tick(int cycles) {
             if (cycle_count_ >= 80) {
                 cycle_count_ -= 80;
                 mode_ = PPUMode::Drawing;
+                stat_ = (stat_ & 0xFC) | 0x03;
             }
             break;
 
@@ -61,6 +61,8 @@ bool PPU::tick(int cycles) {
                 cycle_count_ -= 172;
                 draw_scanline();
                 mode_ = PPUMode::HBlank;
+                stat_ = (stat_ & 0xFC) | 0x00;
+                if (stat_ & 0x08) stat_interrupt_ = true;
             }
             break;
 
@@ -68,10 +70,24 @@ bool PPU::tick(int cycles) {
             if (cycle_count_ >= 204) {
                 cycle_count_ -= 204;
                 ly_++;
+
+                // LYC coincidence check
+                if (ly_ == lyc_) {
+                    stat_ |= 0x04;
+                    if (stat_ & 0x40) stat_interrupt_ = true;
+                } else {
+                    stat_ &= ~0x04;
+                }
+
                 if (ly_ == 144) {
                     mode_ = PPUMode::VBlank;
+                    stat_ = (stat_ & 0xFC) | 0x01;
+                    if (stat_ & 0x10) stat_interrupt_ = true;
+                    frame_ready_ = true;
                 } else {
                     mode_ = PPUMode::OAMScan;
+                    stat_ = (stat_ & 0xFC) | 0x02;
+                    if (stat_ & 0x20) stat_interrupt_ = true;
                 }
             }
             break;
@@ -83,7 +99,8 @@ bool PPU::tick(int cycles) {
                 if (ly_ > 153) {
                     ly_ = 0;
                     mode_ = PPUMode::OAMScan;
-                    frame_ready_ = true;
+                    stat_ = (stat_ & 0xFC) | 0x02;
+                    if (stat_ & 0x20) stat_interrupt_ = true;
                 }
             }
             break;

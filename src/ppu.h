@@ -42,6 +42,11 @@ public:
     SDL_Window*   window_   = nullptr;
     SDL_Renderer* renderer_ = nullptr;
     SDL_Texture*  texture_  = nullptr;
+    bool take_stat_interrupt() {
+    bool val = stat_interrupt_;
+    stat_interrupt_ = false;
+    return val;
+}
 
 private:
     // VRAM — 8KB of tile and map data
@@ -84,6 +89,7 @@ private:
     void draw_background(int line);
     void draw_sprites(int line);
     void draw_window(int line);
+    bool stat_interrupt_ = false;
 
     // Get color from palette register
     u32 get_color(u8 palette, u8 color_id) const;

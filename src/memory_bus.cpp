@@ -121,5 +121,8 @@ bool MemoryBus::tick_ppu(int cycles) {
     if (vblank) {
         mem_[0xFF0F] |= 0x01;
     }
+    if (ppu_.take_stat_interrupt()) {
+        mem_[0xFF0F] |= 0x02;
+    }
     return vblank;
 }
